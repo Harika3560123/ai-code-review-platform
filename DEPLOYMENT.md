@@ -41,10 +41,8 @@ flowchart LR
 Open PowerShell in `c:\Major Project\ai-code-review-platform`:
 
 ```powershell
-# 1. Create a new repository on https://github.com/new (e.g., ai-code-review-platform)
-# 2. Link your local git repository and push:
-git remote add origin https://github.com/<YOUR_GITHUB_USERNAME>/ai-code-review-platform.git
-git branch -M main
+# 1. Create a new repository on https://github.com/new named: ai-code-review-platform
+# 2. Push your code directly (remote is already configured):
 git push -u origin main
 ```
 
