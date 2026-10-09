@@ -1,6 +1,22 @@
 {
   "rewrites": [
     {
+      "source": "/api/:path*",
+      "destination": "https://fare-concentrate-respectively-food.trycloudflare.com/api/:path*"
+    },
+    {
+      "source": "/health",
+      "destination": "https://fare-concentrate-respectively-food.trycloudflare.com/health"
+    },
+    {
+      "source": "/docs",
+      "destination": "https://fare-concentrate-respectively-food.trycloudflare.com/docs"
+    },
+    {
+      "source": "/openapi.json",
+      "destination": "https://fare-concentrate-respectively-food.trycloudflare.com/openapi.json"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
