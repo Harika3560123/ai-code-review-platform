@@ -41,7 +41,8 @@ class FixGeneratorService:
         else:
             # Deterministic heuristic fallback fix based on issue type
             if finding.issue_type == "security":
-                corrected_snippet = f"# [Security Fix] Load secret via environment variable\nimport os\n{original_snippet.replace('=', '= os.getenv(\"SECRET_KEY\", \"\')') if '=' in original_snippet else original_snippet}"
+                var_name = original_snippet.split("=")[0].strip() if "=" in original_snippet else "secret_val"
+                corrected_snippet = f"# [Security Fix] Load secret via environment variable\nimport os\n{var_name} = os.getenv('SECRET_KEY', '')"
                 rec = "Avoid storing secrets in source code. Retrieve via environment configuration."
             elif finding.issue_type == "logical_error" and "/" in original_snippet:
                 corrected_snippet = f"# [Validation] Check for zero before division\nif divisor != 0:\n    {original_snippet}\nelse:\n    return 0"
