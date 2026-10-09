@@ -20,11 +20,13 @@ def get_or_create_engine():
         db_url = settings.DATABASE_URL
         connect_args = {"connect_timeout": 10}
         
-        # Enable SSL for cloud MySQL providers when not local
-        if "localhost" not in db_url and "127.0.0.1" not in db_url and "db:3306" not in db_url:
-            # Most managed providers (Aiven, Railway, Supabase) require SSL
-            if "ssl" not in db_url.lower():
-                connect_args["ssl"] = {"ssl_mode": "REQUIRED"}
+        # Enable TLS/SSL for cloud MySQL providers (Aiven, Railway, etc.) when not local
+        if db_url and "localhost" not in db_url and "127.0.0.1" not in db_url and "db:3306" not in db_url:
+            import ssl
+            ssl_ctx = ssl.create_default_context()
+            ssl_ctx.check_hostname = False
+            ssl_ctx.verify_mode = ssl.CERT_NONE
+            connect_args["ssl"] = ssl_ctx
 
         new_engine = create_engine(
             db_url,

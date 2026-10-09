@@ -13,7 +13,14 @@ class Settings:
     def DATABASE_URL(self) -> str:
         url = os.getenv("DATABASE_URL", "")
         if url.startswith("mysql://"):
-            return url.replace("mysql://", "mysql+pymysql://", 1)
+            url = url.replace("mysql://", "mysql+pymysql://", 1)
+        if "?" in url:
+            base_url, query = url.split("?", 1)
+            params = [
+                p for p in query.split("&")
+                if not p.lower().startswith(("ssl-mode=", "ssl_mode="))
+            ]
+            url = f"{base_url}?{'&'.join(params)}" if params else base_url
         return url
 
     PORT: int = int(os.getenv("PORT", "8000"))
