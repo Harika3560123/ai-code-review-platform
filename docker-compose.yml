@@ -6,7 +6,7 @@ services:
     container_name: code_review_mysql
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-changeme}
       MYSQL_DATABASE: code_review_db
     ports:
       - "3306:3306"
@@ -25,9 +25,12 @@ services:
     container_name: code_review_backend
     restart: always
     environment:
-      - DATABASE_URL=mysql+pymysql://root:root@db:3306/code_review_db
-      - SECRET_KEY=b9c3f4e2a87d1904a6e54c82dbef4093817a02c849d1ef982c73d4a159e60742
+      - DATABASE_URL=${DATABASE_URL:-mysql+pymysql://root:changeme@db:3306/code_review_db}
+      - SECRET_KEY=${SECRET_KEY}
       - LLM_API_KEY=${LLM_API_KEY}
+      - LLM_PROVIDER=${LLM_PROVIDER:-gemini}
+      - APP_ENV=${APP_ENV:-production}
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:5173}
     ports:
       - "8000:8000"
     depends_on:

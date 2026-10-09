@@ -197,3 +197,28 @@ def test_scoring_formula():
     assert summary.critical == 1
     assert scores.security == 70.0 # 100 - 30
     assert scores.overall < 100.0
+
+def test_user_isolation_on_reviews():
+    import uuid
+    user_a_email = f"user_a_{uuid.uuid4().hex[:6]}@example.com"
+    user_b_email = f"user_b_{uuid.uuid4().hex[:6]}@example.com"
+
+    client.post("/api/auth/register", json={"name": "User A", "email": user_a_email, "password": "Password123!"})
+    client.post("/api/auth/register", json={"name": "User B", "email": user_b_email, "password": "Password123!"})
+
+    token_a = client.post("/api/auth/login", json={"email": user_a_email, "password": "Password123!"}).json()["access_token"]
+    token_b = client.post("/api/auth/login", json={"email": user_b_email, "password": "Password123!"}).json()["access_token"]
+
+    # User A creates a review
+    rev_res = client.post(
+        "/api/review/analyze",
+        json={"code": "def foo(x):\n    return 10 / x\n", "language": "python"},
+        headers={"Authorization": f"Bearer {token_a}"}
+    )
+    assert rev_res.status_code == 200
+    review_id = rev_res.json()["review_id"]
+
+    # User B cannot access User A's review
+    forbidden_res = client.get(f"/api/review/{review_id}", headers={"Authorization": f"Bearer {token_b}"})
+    assert forbidden_res.status_code == 403
+

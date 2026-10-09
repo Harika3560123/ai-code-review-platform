@@ -212,6 +212,12 @@ def get_review_history(
     query = db.query(CodeReview)
     if current_user:
         query = query.filter(CodeReview.user_id == current_user.user_id)
+    else:
+        guest_user = db.query(User).filter(User.email == "guest@codereview.local").first()
+        if guest_user:
+            query = query.filter(CodeReview.user_id == guest_user.user_id)
+        else:
+            return []
     
     reviews = query.order_by(CodeReview.created_at.desc()).limit(50).all()
 
@@ -239,12 +245,21 @@ def get_review_history(
 @router.get("/{review_id}", response_model=ReviewResponse)
 def get_review_by_id(
     review_id: int,
+    current_user: Optional[User] = Depends(get_optional_current_user),
     db: Session = Depends(get_db)
 ):
     """Retrieve complete review report and findings by review ID."""
     review = db.query(CodeReview).filter(CodeReview.review_id == review_id).first()
     if not review:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Review not found.")
+
+    owner = db.query(User).filter(User.user_id == review.user_id).first()
+    if owner and owner.email != "guest@codereview.local":
+        if not current_user or current_user.user_id != review.user_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You do not have permission to access another user's review."
+            )
 
     summary_dict = review.metrics_summary or {}
     summary = SummaryCounts(
@@ -302,11 +317,23 @@ def get_review_by_id(
 
 
 @router.get("/{review_id}/findings", response_model=List[FindingSchema])
-def get_findings_for_review(review_id: int, db: Session = Depends(get_db)):
+def get_findings_for_review(
+    review_id: int,
+    current_user: Optional[User] = Depends(get_optional_current_user),
+    db: Session = Depends(get_db)
+):
     """Retrieve only the findings for a specific review."""
     review = db.query(CodeReview).filter(CodeReview.review_id == review_id).first()
     if not review:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Review not found.")
+
+    owner = db.query(User).filter(User.user_id == review.user_id).first()
+    if owner and owner.email != "guest@codereview.local":
+        if not current_user or current_user.user_id != review.user_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You do not have permission to access another user's findings."
+            )
 
     findings: List[FindingSchema] = []
     for f in review.findings:

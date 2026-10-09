@@ -9,14 +9,9 @@ dotenv_path = os.path.join(backend_root, ".env")
 load_dotenv(dotenv_path=dotenv_path)
 
 class Settings:
-    _raw_db_url: str = os.getenv(
-        "DATABASE_URL", 
-        "mysql+pymysql://root:root123@localhost:3307/code_review_db"
-    )
-    
     @property
     def DATABASE_URL(self) -> str:
-        url = self._raw_db_url
+        url = os.getenv("DATABASE_URL", "")
         if url.startswith("mysql://"):
             return url.replace("mysql://", "mysql+pymysql://", 1)
         return url

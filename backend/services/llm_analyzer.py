@@ -160,21 +160,22 @@ Source Code:
                 logger.warning("Failed to extract valid JSON from LLM response.")
                 return []
 
-        issues = parsed.get("issues", [])
+        issues = parsed.get("issues") or parsed.get("findings") or []
         validated_findings: List[RawFinding] = []
 
         for item in issues:
             try:
-                line_no = int(item.get("line", 1))
+                line_no = int(item.get("line") or item.get("line_number") or 1)
                 sev = str(item.get("severity", "MEDIUM")).upper()
                 if sev not in {"CRITICAL", "HIGH", "MEDIUM", "LOW"}:
                     sev = "MEDIUM"
+                itype = str(item.get("issue_type") or item.get("category") or "logical_error")
 
                 validated_findings.append(RawFinding(
                     line=line_no,
-                    issue_type=str(item.get("issue_type", "logical_error")),
+                    issue_type=itype,
                     severity=sev,
-                    title=str(item.get("title", "AI Identified Issue")),
+                    title=str(item.get("title") or item.get("message", "AI Identified Issue")[:60]),
                     message=str(item.get("message", "")),
                     explanation=str(item.get("explanation", "")),
                     evidence=str(item.get("evidence", "")),
